@@ -1,0 +1,16 @@
+.git
+.docker
+node_modules
+vendor
+public/build
+tests
+tools
+*.md
+docker-compose*.yml
+Makefile
+.gitignore
+db
+config
+data
+plugins
+marketplace

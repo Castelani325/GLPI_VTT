@@ -5,36 +5,40 @@ services:
       context: ".docker/app"
       args:
         PHP_VERSION: "8.4"
-    restart: "unless-stopped"
+    restart: "always"
     volumes:
       - ".:/var/www/glpi:rw"
       - "custom_php_ini:/usr/local/etc/php/custom_conf.d/:rw"
     ports:
-      - "8080:80"
-      - "8090:8090" # E2E test server
+      - "8085:80"
       - "9637:9637"
     depends_on:
       - db
     environment:
-      # By default the testing env is exposed under the 8080 internal port
-      CYPRESS_BASE_URL: http://localhost:8080
+      CYPRESS_BASE_URL: http://localhost:8085
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
   db:
     container_name: "glpi-db"
-    image: "mariadb:11.8"
-    restart: "unless-stopped"
+    # Mantendo 10.11 igual à produção — upgrade de versão exige migração explícita dos dados
+    image: "mariadb:10.11"
+    restart: "always"
     volumes:
-      - "db:/var/lib/mysql"
-      - ".docker/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql"
+      # Host mount igual à produção: preserva os dados existentes em ./db
+      - "./db:/var/lib/mysql"
     environment:
-      MARIADB_ROOT_PASSWORD: "glpi"
-      MARIADB_DATABASE: "glpi"
-      MARIADB_USER: "glpi"
-      MARIADB_PASSWORD: "glpi"
-    expose:
-      - "3306"
+      MARIADB_ROOT_PASSWORD: "i.m96M;.O)rK1&Pf.|nt(OS2£j~r:#e*"
+      MARIADB_DATABASE: "glpidb"
+      MARIADB_USER: "glpiuser"
+      MARIADB_PASSWORD: "glpipassword"
+    ports:
+      - "3306:3306"
+    networks:
+      default:
+        aliases:
+          # Alias para manter compatibilidade com o config_db.php que aponta para host "mysql"
+          - mysql
 
   mailpit:
     container_name: "glpi-mailpit"
@@ -56,8 +60,8 @@ services:
 
       LABEL_glpi: "GLPI Mysql Server"
       SERVER_glpi: "db"
-      USER_glpi: "glpi"
-      PASSWORD_glpi: "glpi"
+      USER_glpi: "glpiuser"
+      PASSWORD_glpi: "glpipassword"
       PORT_glpi: 3306
       ENGINE_glpi: "mysql@dbgate-plugin-mysql"
 
@@ -78,7 +82,6 @@ services:
       - "ldap_config:/etc/ldap/slapd.d/:rw"
 
 volumes:
-  db:
   custom_php_ini:
   ldap_files:
   ldap_config:

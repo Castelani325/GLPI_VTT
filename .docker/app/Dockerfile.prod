@@ -1,0 +1,33 @@
+ARG PHP_VERSION=8.4
+
+FROM ghcr.io/glpi-project/glpi-development-env:${PHP_VERSION}
+
+USER root
+
+WORKDIR /var/www/glpi
+
+# Copia o código fonte (exceto o que está no .dockerignore)
+COPY --chown=www-data:www-data . .
+
+USER www-data
+
+# 1. Dependências PHP — apenas produção, uma única passagem (evita conflito de patches)
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Compilar locales (.po -> .mo) para que o GLPI não exija isso em runtime
+RUN find locales -name '*.po' -exec sh -c 'msgfmt -o "${1%.po}.mo" "$1"' _ {} \;
+
+# 2. Dependências JS + build dos assets
+#    Cache redirecionado para /tmp para evitar conflito de permissões em /var/www/.npm
+#    build:illustration-translations é ignorado pois requer conexão com o banco
+RUN CYPRESS_INSTALL_BINARY=0 npm install --cache /tmp/npm-cache \
+    && npm run build:pack \
+    && npm run build:vue \
+    && rm -rf node_modules /tmp/npm-cache
+
+USER root
+
+# Remove arquivos desnecessários em produção
+RUN rm -rf tests/ tools/ .docker/ .git/
+
+USER www-data
