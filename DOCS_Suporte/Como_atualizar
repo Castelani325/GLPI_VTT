@@ -1,0 +1,93 @@
+Para manter um ambiente profissional, você vai trabalhar com o conceito de **sincronização de ramos (branches)**. Imagine que você tem uma trilha "limpa" (o código original) e uma trilha "modificada" (as suas personalizações).
+
+Aqui está o fluxo de trabalho detalhado para os dois cenários:
+
+### Cenário 1: Atualizar o seu GLPI com as novidades do Original
+### Cenário 2: Atualizar apenas o seu GLPI Personalizado
+
+
+
+---
+
+### Cenário 1: Atualizar o seu GLPI com as novidades do Original
+
+Você quer trazer as correções de segurança e novas funções que a equipe oficial do GLPI lançou para dentro do seu projeto.
+
+1. **Vá para a sua branch principal (limpa):**
+```bash
+git checkout main
+
+```
+
+
+2. **Baixe as novidades do repositório oficial (Upstream):**
+
+```bash
+    git fetch upstream
+    ```
+3.  **Mescle o código oficial na sua `main` local:**
+    ```bash
+    git merge upstream/main
+    ```
+    *Isso deixa sua branch `main` idêntica à do GLPI oficial.*
+4.  **Agora, leve essas atualizações para a sua branch de personalização (ex: `GLPI_VTT`):**
+    ```bash
+    git checkout GLPI_VTT
+    git merge main
+    ```
+5.  **Resolva conflitos (se houver):**
+    Se você alterou uma linha que o GLPI também alterou, o Git pedirá para você escolher qual versão manter. Após resolver, finalize com:
+    
+```bash
+    git add .
+    git commit -m "Merge: Atualização oficial aplicada às customizações"
+    ```
+
+---
+
+### Cenário 2: Atualizar apenas o seu GLPI Personalizado
+
+Isso acontece quando você terminou uma alteração (mudou um logo, criou um script de automação ou ajustou um layout) e quer salvar isso no seu repositório do GitHub/GitLab sem mexer em nada do código original.
+
+1.  **Garanta que está na sua branch de trabalho:**
+    
+```bash
+    git checkout GLPI_VTT
+    ```
+2.  **Adicione suas alterações para o "palco" (stage):**
+    
+```bash
+    git add .
+    ```
+3.  **Crie o ponto de salvamento (commit):**
+    
+```bash
+    git commit -m "feat: Adicionado logo da empresa e ajuste no CSS do login"
+    ```
+4.  **Envie apenas para o SEU repositório (Origin):**
+    
+```bash
+    git push origin GLPI_VTT
+    ```
+
+---
+
+### Resumo Visual da Estrutura
+
+| Ação | Comando Principal | Origem -> Destino |
+| :--- | :--- | :--- |
+| **Sincronizar com Oficial** | `git pull upstream main` | GLPI Oficial -> Sua Máquina |
+| **Salvar Customização** | `git push origin minha-branch` | Sua Máquina -> Seu GitHub |
+| **Aplicar Update no Custom** | `git merge main` (dentro da branch custom) | Código Limpo -> Código Alterado |
+
+---
+
+### Dicas de Ouro para Profissionais:
+
+*   **O Arquivo `.gitignore`:** Certifique-se de que a pasta `config/` e `files/` (onde ficam fotos de usuários e documentos) estejam no seu `.gitignore`. Você não quer versionar as senhas do seu banco de dados ou arquivos privados dos chamados.
+*   **Ambiente de Homologação:** Como você trabalha com análise de TI e automação, **nunca** rode o `git merge` direto no servidor de produção. Faça na sua máquina, teste se o GLPI abre corretamente e se as suas automações (via n8n ou scripts) continuam funcionando, e só então suba para o servidor.
+*   **Banco de Dados:** Lembre-se que o Git gerencia os **arquivos**. Se a nova versão do GLPI exigir uma atualização no banco de dados, você precisará rodar o assistente de atualização via navegador ou linha de comando (`php bin/console db:update`) após baixar os arquivos novos.
+
+Você já configurou os ambientes de homologação e produção ou está rodando tudo em um único servidor?
+
+```
