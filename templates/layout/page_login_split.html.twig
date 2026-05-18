@@ -1,0 +1,283 @@
+{#
+ # ---------------------------------------------------------------------
+ # Layout exclusivo da tela de login — split-screen VTT
+ # ---------------------------------------------------------------------
+ #}
+
+{% set theme = current_theme() %}
+{% if css_files is not defined %}
+   {% set css_files = [
+       {'path': 'lib/base.css'},
+       {'path': 'lib/tabler.css'},
+       {'path': 'css/glpi.scss'},
+       {'path': 'css/core_palettes.scss'}
+   ] %}
+   {% for theme_path in get_custom_themes_paths() %}
+      {% set css_files = css_files|merge([{'path': theme_path}]) %}
+   {% endfor %}
+{% endif %}
+{% if js_files is not defined %}
+   {% set js_files = [
+       {'path': 'lib/base.js'},
+       {'path': 'js/common.js'},
+       {'path': 'lib/fuzzy.js'}
+   ] %}
+{% endif %}
+{% if js_modules is not defined %}
+   {% set js_modules = [] %}
+{% endif %}
+{% if custom_header_tags is not defined %}
+   {% set custom_header_tags = [] %}
+{% endif %}
+
+{% set js_files = js_files|merge(get_plugins_js_scripts_files(true)) %}
+{% set js_modules = js_modules|merge(get_plugins_js_modules_files(true)) %}
+{% set is_anonymous_page = true %}
+
+{{ include('layout/parts/head.html.twig') }}
+
+<style>
+/* ─── Reset & Base ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body.vtt-login-body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #fff;
+    overflow: hidden;
+}
+
+/* ─── Wrapper ───────────────────────────────────────────────────── */
+.vtt-wrapper {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+}
+
+/* ─── Left panel ────────────────────────────────────────────────── */
+.vtt-left {
+    flex: 0 0 55%;
+    position: relative;
+    background-color: #1a1f4e;
+    background-image: url('{{ path('pics/login_bg.jpg') }}');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* overlay para garantir legibilidade do logo sobre a imagem */
+.vtt-left::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(15, 25, 70, 0.55) 0%,
+        rgba(60, 30, 100, 0.40) 100%
+    );
+    pointer-events: none;
+    z-index: 0;
+}
+
+.vtt-brand {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
+
+.vtt-brand .glpi-logo {
+    width: 220px !important;
+    height: 80px !important;
+    background-size: contain !important;
+    filter: brightness(0) invert(1);
+}
+
+.vtt-brand-divider {
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    border: none;
+}
+
+.vtt-brand-label {
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+/* ─── Right panel ───────────────────────────────────────────────── */
+.vtt-right {
+    flex: 0 0 45%;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.vtt-form-area {
+    width: 100%;
+    max-width: 360px;
+    padding: 0 32px;
+}
+
+/* ─── Form elements ─────────────────────────────────────────────── */
+.vtt-form-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #0b1120;
+    line-height: 1.2;
+    margin-bottom: 6px;
+}
+
+.vtt-form-sub {
+    font-size: 13px;
+    color: #8a93a6;
+    margin-bottom: 36px;
+    font-weight: 400;
+}
+
+.vtt-form-area .form-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #3d4557;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.vtt-form-area .form-control {
+    width: 100%;
+    border: 1.5px solid #e8eaee;
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: #0b1120;
+    background: #f7f8fa;
+    transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+    outline: none;
+}
+
+.vtt-form-area .form-control:focus {
+    border-color: #1e64dc;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(30, 100, 220, 0.10);
+}
+
+.vtt-form-area .form-control::placeholder {
+    color: #b5bbc9;
+}
+
+.vtt-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+}
+
+.vtt-label-row .form-label {
+    margin-bottom: 0;
+}
+
+.vtt-forgot {
+    font-size: 12px;
+    color: #8a93a6;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s;
+}
+.vtt-forgot:hover { color: #1e64dc; }
+
+.vtt-form-area .form-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.vtt-form-area .form-check-input {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1.5px solid #d1d5df;
+    cursor: pointer;
+    accent-color: #1e64dc;
+}
+
+.vtt-form-area .form-check-label {
+    font-size: 13px;
+    color: #5a6178;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.vtt-submit {
+    width: 100%;
+    padding: 12px;
+    background: #1e64dc;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.1s, box-shadow 0.18s;
+    box-shadow: 0 4px 14px rgba(30, 100, 220, 0.25);
+}
+.vtt-submit:hover {
+    background: #1754c2;
+    box-shadow: 0 6px 18px rgba(30, 100, 220, 0.35);
+    transform: translateY(-1px);
+}
+.vtt-submit:active { transform: translateY(0); box-shadow: none; }
+
+.vtt-footer {
+    margin-top: 48px;
+    font-size: 11px;
+    color: #c0c5d0;
+    text-align: center;
+}
+
+/* ─── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .vtt-left { display: none; }
+    .vtt-right { flex: 0 0 100%; }
+    body.vtt-login-body { overflow: auto; }
+    .vtt-form-area { padding: 40px 24px; }
+}
+</style>
+
+<body class="vtt-login-body">
+    <div class="vtt-wrapper">
+
+        <div class="vtt-left">
+            <div class="vtt-brand">
+                <span class="glpi-logo" title="Portal de Suporte"></span>
+                <hr class="vtt-brand-divider">
+                <span class="vtt-brand-label">Portal de Suporte</span>
+            </div>
+        </div>
+
+        <div class="vtt-right">
+            <div class="vtt-form-area">
+                {% block content_block %}{% endblock %}
+                <div class="vtt-footer">
+                    {% block footer_block %}{% endblock %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% block javascript_block %}{% endblock %}
+</body>
+</html>

@@ -5,6 +5,7 @@ vendor
 public/build
 tests
 tools
+!tools/HEADER
 *.md
 docker-compose*.yml
 Makefile
